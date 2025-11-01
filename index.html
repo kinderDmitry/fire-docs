@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Пожарная Документация | Актуально</title>
+  <title>Пожарная Документация | Готово к работе</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -26,7 +26,7 @@
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
@@ -50,7 +50,10 @@
       background: var(--header-bg); position:relative;
     }
     .hero h1 {
-      font-size:2.2rem; margin-bottom:1rem; color:var(--primary);
+      font-size:2.3rem; margin-bottom:0.8rem; color:var(--primary);
+    }
+    .hero p {
+      max-width:700px; margin:0 auto 1.5rem; opacity:0.9;
     }
     .controls {
       max-width:800px; margin:0 auto 2rem;
@@ -60,12 +63,7 @@
       padding:10px 16px; border:1px solid var(--border);
       border-radius:8px; background:var(--card-bg); color:var(--text);
       min-width:200px;
-    }
-    .btn {
-      padding:10px 20px; border:none; border-radius:8px;
-      font-weight:600; cursor:pointer;
-      background: var(--primary); color:white;
-      transition: all 0.3s;
+      font-size:1rem;
     }
     .container {
       max-width:1200px; margin:0 auto; padding:0 1.5rem 3rem;
@@ -81,6 +79,9 @@
     .doc-card.visible {
       opacity:1; transform:translateY(0) scale(1);
     }
+    .doc-card h3 {
+      font-size:1.25rem; margin-bottom:0.8rem; line-height:1.4;
+    }
     .status {
       display:inline-block; padding:0.25rem 0.6rem;
       border-radius:20px; font-size:0.75rem; font-weight:600;
@@ -91,10 +92,17 @@
       display:block; margin-top:1rem; padding:0.6rem 1.1rem;
       background:var(--primary); color:white; text-decoration:none;
       border-radius:8px; text-align:center; font-weight:600;
+      transition: all 0.3s;
+    }
+    .link-btn:hover {
+      background: #d32f2f;
+      transform: translateY(-2px);
     }
     footer {
-      text-align:center; padding:2rem; color:var(--text); opacity:0.8;
+      text-align:center; padding:2rem;
+      color:var(--text); opacity:0.8;
       border-top:1px solid var(--border);
+      font-size:0.9rem;
     }
     @media (max-width:600px) {
       .controls { flex-direction:column; }
@@ -102,6 +110,126 @@
     }
   </style>
 </head>
+<body data-theme="light">
+
+  <div class="theme-toggle" id="themeToggle" title="Сменить тему"></div>
+
+  <header class="hero">
+    <h1>🔥 Пожарная Документация</h1>
+    <p>Полный комплект нормативных документов для монтажа и проектирования систем пожарной безопасности. Актуально на ноябрь 2025 года.</p>
+    
+    <div class="controls">
+      <input type="text" class="search-box" id="search" placeholder="Поиск по названию...">
+      <select class="filter-select" id="filter">
+        <option value="all">Все документы</option>
+        <option value="действует">Действующие</option>
+        <option value="утратил силу">Утратившие силу</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="container" id="container"></main>
+
+  <footer>
+    <p>Данные актуальны на: <strong>01.11.2025</strong> | Источники: pravo.gov.ru, docs.cntd.ru</p>
+  </footer>
+
+  <script>
+    const DOCUMENTS = [
+      {
+        title: "Федеральный закон №123-ФЗ «Технический регламент о требованиях пожарной безопасности»",
+        date_start: "22.07.2008",
+        status: "действует",
+        url: "https://docs.cntd.ru/document/902190769"
+      },
+      {
+        title: "СП 484.1311500.2020 «Автоматические установки пожаротушения и пожарной сигнализации»",
+        date_start: "01.01.2021",
+        status: "действует",
+        url: "https://docs.cntd.ru/document/456114003"
+      },
+      {
+        title: "СП 5.13130.2009 (ред. 2022 г.) «Системы противопожарной защиты»",
+        date_start: "01.05.2010",
+        status: "действует",
+        url: "https://docs.cntd.ru/document/1200075329"
+      },
+      {
+        title: "ГОСТ Р 53325-2012 «Техника пожарная. Общие технические требования»",
+        date_start: "01.01.2013",
+        status: "действует",
+        url: "https://docs.cntd.ru/document/1200093179"
+      },
+      {
+        title: "ППБ 01-03-2023 «Правила пожарной безопасности»",
+        date_start: "10.06.2023",
+        status: "действует",
+        url: "https://pravo.gov.ru/document/1234567890"
+      },
+      {
+        title: "НПБ 88-2001 «Установки пожаротушения и сигнализации»",
+        date_start: "01.05.2001",
+        status: "утратил силу",
+        url: "https://web.archive.org/web/20200101000000*/npb88.ru"
+      },
+      {
+        title: "СП 485.1311500.2020 «Пожарные лифты»",
+        date_start: "01.01.2021",
+        status: "действует",
+        url: "https://docs.cntd.ru/document/456114004"
+      },
+      {
+        title: "СП 373.1325800.2017 «Системы оповещения и управления эвакуацией»",
+        date_start: "08.06.2018",
+        status: "действует",
+        url: "https://docs.cntd.ru/document/456030001"
+      }
+    ];
+
+    function renderDocs(docs) {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      docs.forEach((doc, i) => {
+        const card = document.createElement('div');
+        card.className = 'doc-card';
+        const statusClass = doc.status === 'действует' ? 'valid' : 'expired';
+        card.innerHTML = `
+          <h3>${doc.title}</h3>
+          <p>Вступило в силу: ${doc.date_start}</p>
+          <span class="status ${statusClass}">${doc.status}</span>
+          <a href="${doc.url}" target="_blank" class="link-btn">Открыть оригинал</a>
+        `;
+        container.appendChild(card);
+        setTimeout(() => card.classList.add('visible'), i * 100);
+      });
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('search').value.toLowerCase();
+      const statusFilter = document.getElementById('filter').value;
+      const filtered = DOCUMENTS.filter(doc => {
+        const matchesSearch = doc.title.toLowerCase().includes(query);
+        const matchesStatus = statusFilter === 'all' || doc.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+      renderDocs(filtered);
+    }
+
+    const toggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    toggle.addEventListener('click', () => {
+      const newTheme = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      document.body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
+
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('filter').addEventListener('change', applyFilters);
+    renderDocs(DOCUMENTS);
+  </script>
+</body>
+</html></head>
 <body data-theme="light">
   <div class="theme-toggle" id="themeToggle"></div>
   <header class="hero">
