@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Пожарная Документация | Актуально</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #263238;
+      --card-bg: #ffffff;
+      --border: #e0e0e0;
+      --primary: #e53935;
+      --success: #4caf50;
+      --danger: #f44336;
+      --shadow: rgba(0,0,0,0.08);
+      --header-bg: linear-gradient(135deg, #fff8f8, #ffecec);
+    }
+    [data-theme="dark"] {
+      --bg: #121212;
+      --text: #e0e0e0;
+      --card-bg: #1e1e1e;
+      --border: #333;
+      --shadow: rgba(0,0,0,0.3);
+      --header-bg: linear-gradient(135deg, #1a1a1a, #252525);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
+    }
+    .theme-toggle {
+      position: absolute; top:16px; right:16px;
+      width:44px; height:24px; border-radius:12px;
+      background: var(--card-bg); border:1px solid var(--border);
+      cursor:pointer; padding:2px;
+    }
+    .theme-toggle::after {
+      content:''; width:18px; height:18px; border-radius:50%;
+      background: var(--primary); transition:transform 0.3s;
+    }
+    [data-theme="dark"] .theme-toggle::after {
+      transform: translateX(20px); background: #ffd700;
+    }
+    .hero {
+      text-align:center; padding:3rem 1.5rem 2rem;
+      background: var(--header-bg); position:relative;
+    }
+    .hero h1 {
+      font-size:2.2rem; margin-bottom:1rem; color:var(--primary);
+    }
+    .controls {
+      max-width:800px; margin:0 auto 2rem;
+      display:flex; gap:12px; flex-wrap:wrap; justify-content:center;
+    }
+    .search-box, .filter-select {
+      padding:10px 16px; border:1px solid var(--border);
+      border-radius:8px; background:var(--card-bg); color:var(--text);
+      min-width:200px;
+    }
+    .btn {
+      padding:10px 20px; border:none; border-radius:8px;
+      font-weight:600; cursor:pointer;
+      background: var(--primary); color:white;
+      transition: all 0.3s;
+    }
+    .container {
+      max-width:1200px; margin:0 auto; padding:0 1.5rem 3rem;
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:1.8rem;
+    }
+    .doc-card {
+      background:var(--card-bg); border-radius:14px;
+      box-shadow:0 6px 16px var(--shadow); padding:1.6rem;
+      opacity:0; transform:translateY(20px) scale(0.98);
+      transition:all 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+      border-left:4px solid var(--primary);
+    }
+    .doc-card.visible {
+      opacity:1; transform:translateY(0) scale(1);
+    }
+    .status {
+      display:inline-block; padding:0.25rem 0.6rem;
+      border-radius:20px; font-size:0.75rem; font-weight:600;
+    }
+    .status.valid { background:rgba(76,175,80,0.15); color:var(--success); }
+    .status.expired { background:rgba(244,67,54,0.15); color:var(--danger); }
+    .link-btn {
+      display:block; margin-top:1rem; padding:0.6rem 1.1rem;
+      background:var(--primary); color:white; text-decoration:none;
+      border-radius:8px; text-align:center; font-weight:600;
+    }
+    footer {
+      text-align:center; padding:2rem; color:var(--text); opacity:0.8;
+      border-top:1px solid var(--border);
+    }
+    @media (max-width:600px) {
+      .controls { flex-direction:column; }
+      .hero h1 { font-size:1.8rem; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <div class="theme-toggle" id="themeToggle"></div>
+  <header class="hero">
+    <h1>🔥 Пожарная Документация</h1>
+    <div class="controls">
+      <input type="text" class="search-box" id="search" placeholder="Поиск...">
+      <select class="filter-select" id="filter">
+        <option value="all">Все</option>
+        <option value="действует">Действуют</option>
+        <option value="утратил силу">Не действуют</option>
+      </select>
+    </div>
+  </header>
+  <main class="container" id="container"></main>
+  <footer>
+    <p>Данные обновлены: <span id="lastUpdate">—</span></p>
+  </footer>
+
+  <script>
+    // Загрузка данных
+    fetch('docs.json?' + Date.now())
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('lastUpdate').textContent = new Date(data.last_update).toLocaleDateString('ru-RU');
+        renderDocs(data.documents);
+      })
+      .catch(() => {
+        // Резервные данные (если docs.json недоступен)
+        const fallback = [
+          {title:"ФЗ-123", date_start:"22.07.2008", status:"действует", url:"https://docs.cntd.ru/document/902190769"},
+          {title:"СП 484.1311500.2020", date_start:"01.01.2021", status:"действует", url:"https://docs.cntd.ru/document/456114003"}
+        ];
+        renderDocs(fallback);
+        document.getElementById('lastUpdate').textContent = 'данные offline';
+      });
+
+    function renderDocs(docs) {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      docs.forEach((doc, i) => {
+        const el = document.createElement('div');
+        el.className = 'doc-card';
+        const statusCls = doc.status === 'действует' ? 'valid' : 'expired';
+        el.innerHTML = `
+          <h3>${doc.title}</h3>
+          <p>Вступило: ${doc.date_start || '—'}</p>
+          <span class="status ${statusCls}">${doc.status}</span>
+          <a href="${doc.url}" target="_blank" class="link-btn">Открыть</a>
+        `;
+        container.appendChild(el);
+        setTimeout(() => el.classList.add('visible'), i * 100);
+      });
+    }
+
+    // Фильтрация
+    document.getElementById('search').addEventListener('input', filter);
+    document.getElementById('filter').addEventListener('change', filter);
+    function filter() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const f = document.getElementById('filter').value;
+      const cards = document.querySelectorAll('.doc-card');
+      cards.forEach(card => {
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        const status = card.querySelector('.status').textContent;
+        const show = title.includes(q) && (f === 'all' || status.includes(f));
+        card.style.display = show ? 'block' : 'none';
+      });
+    }
+
+    // Тема
+    const toggle = document.getElementById('themeToggle');
+    const saved = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', saved);
+    toggle.addEventListener('click', () => {
+      const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      document.body.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+    });
+  </script>
+</body>
+</html>
